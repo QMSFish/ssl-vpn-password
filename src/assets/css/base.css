@@ -1,0 +1,48 @@
+/* 全局样式表 */
+
+html,
+body,
+#app {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.el-form-item {
+    margin-bottom: 15px!important;
+}
+
+.el-input--suffix .el-input__inner {
+    padding-right: 15px!important;
+}
+
+.el-checkbox {
+    width: 150px;
+}
+
+.el-aside {
+    overflow: hidden!important;
+}
+
+.el-table th {
+    color: #fff;
+    /* height: 40px; */
+    padding: 5px 0!important;
+    background-color: #4e89b9!important;
+}
+
+.el-textarea__inner {
+    height: 147px;
+    resize: none!important;
+}
+
+ul {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+
+/* .el-checkbox {
+    color: #53bc78!important;
+} */
