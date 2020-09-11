@@ -42,10 +42,11 @@ export default {
 
 </script>
 <style scoped>
-  .main_header {
+  /* .main_header {
     margin: 20px 20px 0;
-  }
+  } */
   .homepage_device {
+    min-width: 1000px;
     margin: 18px 8px 0;
   }
   .two,

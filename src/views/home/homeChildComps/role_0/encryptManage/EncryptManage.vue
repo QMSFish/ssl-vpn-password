@@ -181,9 +181,9 @@ export default {
 
 </script>
 <style scoped>
-  .main_header {
+  /* .main_header {
     margin: 20px 20px 0;
-  }
+  } */
   .encrypt_center {
     margin: 10px 5px 0;
   }

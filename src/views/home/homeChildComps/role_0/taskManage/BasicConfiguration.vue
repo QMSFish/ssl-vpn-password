@@ -155,9 +155,10 @@ export default {
 
 </script>
 <style scoped>
-  .main_header {
+  /* .main_header {
+    min-width: 1000px;
     margin: 20px 20px 0;
-  }
+  } */
   .form_tool {
     position: relative;
     height: 150px;

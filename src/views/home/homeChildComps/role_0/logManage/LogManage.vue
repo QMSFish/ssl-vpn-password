@@ -106,7 +106,7 @@ export default {
         name: 'bab/service_debug.log',
         size: '1.7k',
         lastChangeTime: '2019-10-15 16:28:35',
-      }]
+      }],
     }
   },
   methods: {
@@ -121,9 +121,9 @@ export default {
 
 </script>
 <style scoped>
-  .main_header {
+  /* .main_header {
     margin: 20px 20px 0;
-  }
+  } */
   .log_center {
     margin: 10px 5px 0;
   }

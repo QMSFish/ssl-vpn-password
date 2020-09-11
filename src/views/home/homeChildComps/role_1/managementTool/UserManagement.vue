@@ -12,9 +12,9 @@
               <el-input v-model="userFormData.name" placeholder="请输入用户名称"></el-input>
             </el-form-item>
             <el-form-item label="用户口令" prop="password">
-              <el-input v-model="userFormData.password" placeholder="请输入密码"></el-input>
+              <el-input type="password" v-model="userFormData.password" placeholder="请输入密码"></el-input>
             </el-form-item>
-            <el-form-item label="确定口令" prop="checkPassword">
+            <el-form-item type="password" label="确定口令" prop="checkPassword">
               <el-input v-model="userFormData.checkPassword" placeholder="请输入密码"></el-input>
             </el-form-item>
             <el-form-item label="用户类型" prop="level">
@@ -155,7 +155,7 @@ export default {
         ]
       },
       // 用户管理 table
-        tableData: []
+        tableData: [],
     }
   },
   created() {
@@ -225,7 +225,10 @@ export default {
         if(!valid) {
           return this.$message.error('验证不通过！')
         }
-        this.addUser1(this.userFormData)
+        // 对象深拷贝
+        const obj = JSON.parse(JSON.stringify(this.userFormData));
+        this.addUser1(obj);
+        this.$refs.userForm_ref.resetFields();
       })
       
     }
@@ -234,9 +237,9 @@ export default {
 
 </script>
 <style scoped>
-  .main_header {
+  /* .main_header {
     margin: 20px 20px 0;
-  }
+  } */
   .user_center {
     position: relative;
     height: 400px;

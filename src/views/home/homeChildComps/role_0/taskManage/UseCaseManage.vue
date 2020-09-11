@@ -2,7 +2,7 @@
   <div>
     <div class="main_header">
       <!-- 顶行 -->
-      <top-line :topdata="topdata"></top-line>
+      <top-line :topdata="topdata" class="top_line"></top-line>
       <!-- 用例库配置 -->
       <div class="use_case">
         <!-- top -->
@@ -146,7 +146,7 @@
             prop="type"
             label="待检设备类型"
             sortable
-            min-width="100">
+            min-width="160">
           </el-table-column>
           <el-table-column
             prop="mode"
@@ -197,8 +197,8 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="用例选择" prop="caseName">
-            <el-select v-model="useCaseLibrary.case[0].caseName" placeholder="请选择">
+          <el-form-item label="用例选择" prop="cases">
+            <el-select v-model="useCaseLibrary.cases" placeholder="请选择">
               <el-option
                 v-for="item in caseOptions"
                 :key="item.value"
@@ -258,7 +258,7 @@ export default {
         caseName:'',
         deviceType: '',
         mode: '',
-        case: []
+        cases: []
       },
       // from表单的验证规则
       useCaseForm_rules: {
@@ -282,22 +282,26 @@ export default {
       caseData: [],
       // 用例库表 table
       tableData: [],
+      
       // 用例对话框显示隐藏变量
       modifyCaseFlag: false,
       // 修改用例请求参数对象
+      // useCaseLibrary: {
+      //   caseName:'',
+      //   deviceType: '',
+      //   mode: '',
+      //   cases: [{
+      //     caseName: ''
+      //     }]
+      // },
       useCaseLibrary: {
         caseName:'',
         deviceType: '',
         mode: '',
-        case: [{
-          caseName: ''
-          }]
+        cases: ''
       },
       // 待检设备类型 select数据
       deviceOptions: [{
-        value: 'user',
-        label: '客户端'
-      }, {
         value: 'server',
         label: '服务端'
       }],
@@ -305,9 +309,6 @@ export default {
       modeOptions: [{
         value: 'CSMODE',
         label: '客户端-服务端模式'
-      }, {
-        value: 'SMODE',
-        label: '服务端模式'
       }],
       // 用例选择  select数据
       caseOptions: [{
@@ -340,7 +341,7 @@ export default {
         mode: [
           { required: true, message: '请选择模式', trigger: 'blur' }
         ],
-        caseName: [
+        cases: [
           { required: true, message: '请选择用例', trigger: 'blur' }
         ],
       },
@@ -403,7 +404,7 @@ export default {
       this.useCaseLibrary.caseName = row.name;
       this.useCaseLibrary.deviceType = row.type;
       this.useCaseLibrary.mode = row.mode;
-      this.useCaseLibrary.case[0].caseName = row.casesName;
+      this.useCaseLibrary.cases = row.casesName;
       this.modifyCaseFlag = true
     },
     // 修改用例对话框关闭,重置表单到初始状态
@@ -414,10 +415,13 @@ export default {
     btnClicked() {
       this.$refs.useCaseLibrary_ref.validate((valid) => {
         if(!valid) {
-          return this.message.error('验证不通过！')
+          return this.$message.error('验证不通过！')
         };
         // 对象深拷贝
         const obj = JSON.parse(JSON.stringify(this.useCaseLibrary));
+        // 并且修改对象结构
+        obj.cases = [{caseName: obj.cases}];
+        console.log(obj);
         this.modify_case1(obj);
         this.modifyCaseFlag = false;
       })
@@ -436,11 +440,13 @@ export default {
           return this.$message.error('至少选择一个用例')
         }
         this.caseValue.forEach(item => {
-          this.useCaseForm.case.push({
-            caseName: items
+          this.useCaseForm.cases.push({
+            caseName: item
           })
         });
         const obj = JSON.parse(JSON.stringify(this.useCaseForm))
+        console.log(obj);
+        console.log('请求体'+ obj);
         this.add_case1(obj);
         // 把表单恢复到初始状态
         this.$refs.useCaseForm_ref.resetFields();
@@ -453,12 +459,16 @@ export default {
 
 </script>
 <style scoped>
-  .main_header {
+  /* .main_header {
     margin: 20px 20px 0;
+  } */
+  .top_line {
+    min-width: 500px;
   }
   .use_case {
     position: relative;
     height: 650px;
+    min-width: 800px;
     margin: 10px 0 0 5px;
   }
   .use_case_top1 span,
@@ -473,6 +483,7 @@ export default {
   }
   .use_case_select {
     color: #606266;
+    min-width: 582px;
     margin: 20px 0 0 35px;
   }
   .el_transfer {
@@ -539,6 +550,7 @@ export default {
     cursor: pointer;
   }
   .use_case_list {
+    min-width: 800px;
     padding-top: 10px;
     border-top: 3px solid #4e89b9;
   }

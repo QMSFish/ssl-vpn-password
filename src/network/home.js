@@ -103,3 +103,82 @@ export function query_login_stat() {
         method: 'get',
     })
 }
+
+export function minor_logout() {
+    return request1({
+        url: '/user/minor_logout',
+        method: 'post',
+    })
+}
+
+export function query_task() {
+    return request1({
+        // url: '/task/query_task?taskNum=' + taskNum,
+        url: '/task/query_task',
+        method: 'get',
+    })
+}
+
+export function query_singel_task(taskNum) {
+    return request1({
+        url: '/task/query_task?taskNum=' + taskNum,
+        // url: '/task/query_task',
+        method: 'get',
+    })
+}
+
+export function add_task(obj) {
+    return request1({
+        url: '/task/add_task',
+        method: 'post',
+        data: obj
+    })
+}
+
+export function modify_task(obj) {
+    return request1({
+        url: '/task/modify_task',
+        method: 'post',
+        data: obj
+    })
+}
+
+export function delete_task(taskNum) {
+    return request1({
+        url: '/task/delete_task?taskNum=' + taskNum,
+        // url: '/task/query_task',
+        method: 'post',
+    })
+}
+
+export function start_task(taskNum) {
+    return request1({
+        url: '/task/start_task?taskNum=' + taskNum,
+        // url: '/task/query_task',
+        method: 'post',
+    })
+}
+
+export function stop_task(taskNum) {
+    return request1({
+        url: '/task/stop_task?taskNum=' + taskNum,
+        // url: '/task/query_task',
+        method: 'post',
+    })
+}
+
+export function restart_task(taskNum) {
+    return request1({
+        url: '/task/restart_task?taskNum=' + taskNum,
+        // url: '/task/query_task',
+        method: 'post',
+    })
+}
+
+export function clean_data(taskNum) {
+    return request1({
+        url: '/task/clean_data?taskNum=' + taskNum,
+        // url: '/task/query_task',
+        method: 'post',
+    })
+}

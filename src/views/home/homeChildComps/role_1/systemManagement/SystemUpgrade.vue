@@ -48,9 +48,9 @@ export default {
 
 </script>
 <style scoped>
-  .main_header {
+  /* .main_header {
     margin: 20px 20px 0;
-  }
+  } */
   .up_file {
     position: relative;
     font-size: 14px;

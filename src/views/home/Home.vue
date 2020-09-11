@@ -7,14 +7,14 @@
           <span>SSLVPN密码检测系统</span>
         </div>
         <div class="head_right">
-          <el-dropdown trigger="click">
+          <el-dropdown trigger="click" @command="handleCommand">
             <span class="el-dropdown-left">
              你好，{{username}}<i class="el-icon-arrow-down el-icon--right"></i>
             </span>
             <span class="el-dropdown-right">?</span>
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item>登录</el-dropdown-item>
-              <el-dropdown-item @click="modifyBtn">修改</el-dropdown-item>
+              <el-dropdown-item command="out">退出登录</el-dropdown-item>
+              <el-dropdown-item command="change">修改密码</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>  
         </div>
@@ -51,7 +51,7 @@
       title="修改密码"
       :visible.sync="modifyPasswordFlag"
       width="50%"
-      >
+      @close="modifyPasswordClosed">
       <el-form :model="modifyPassword" status-icon :rules="modifyPassword_rules" 
       ref="modifyPassword_ref" label-width="100px">
         <el-form-item label="用户名" prop="userName">
@@ -79,7 +79,7 @@
 <script>
 import HomeAside from 'components/common/aside/HomeAside'
 
-import {queryRouter,modify_password} from 'network/home'
+import {queryRouter,modify_password,minor_logout} from 'network/home'
 
 
 export default {
@@ -87,18 +87,33 @@ export default {
   data() {
     var validatePass = (rule, value, callback) => {
         if (value === '') {
-          callback(new Error('请输入密码'));
+          callback(new Error('请输入旧密码'));
         } else {
-          if (this.modifyPassword.password !== '') {
-            this.$refs.modifyPassword_ref.validateField('checkPassword');
+          if (this.modifyPassword.newPassword !== '') {
+            this.$refs.modifyPassword_ref.validateField('newPassword');
           }
           callback();
         }
       };
+      var validatePass1 = (rule, value, callback) => {
+        if (value === '') {
+          callback(new Error('请输入新密码'));
+        } else {
+          if(value === this.modifyPassword.oldPassword) {
+            callback(new Error('新密码和旧密码不能一样!'));
+            // return;
+          } else {
+            if(this.modifyPassword.checkPassword !== '') {
+              this.$refs.modifyPassword_ref.validateField('checkPassword');
+            }
+              callback();
+          }
+        }
+      };
       var validatePass2 = (rule, value, callback) => {
         if (value === '') {
-          callback(new Error('请再次输入密码'));
-        } else if (value !== this.modifyPassword.password) {
+          callback(new Error('请再次输入新密码'));
+        } else if (value !== this.modifyPassword.newPassword) {
           callback(new Error('两次输入密码不一致!'));
         } else {
           callback();
@@ -136,7 +151,7 @@ export default {
           { validator: validatePass, trigger: 'blur' }
         ],
         newPassword: [
-          { validator: validatePass, trigger: 'blur' }
+          { validator: validatePass1, trigger: 'blur' }
         ],
         checkPassword: [
           { validator: validatePass2, trigger: 'blur' }
@@ -146,7 +161,7 @@ export default {
       modifyPasswordParams: {
         name: '',
         newPwd: '',
-        oldPw: ''
+        oldPwd: ''
       }
 
     }
@@ -182,28 +197,50 @@ export default {
       if(!res || res.status !== 0) {
         return this.$message.error('修改密码失败！')
       }
-      this.$message.success('修改密码成功')
-
+      this.$message.success('修改密码成功');
+      this.$router.push('/login');
     },
-    // 点击修改按钮 修改用户名密码
-    modifyBtn() {
-      this.modifyPassword.userName = localStorage.getItem('username');
-      this.modifyPasswordFlag = true
+    // 用户登出请求
+    async minor_logout1() {
+      const res = await minor_logout();
+      console.log(res);
+      if(!res || res.status !== 0) {
+        return this.$message.error('登出失败！')
+      }
+      this.$router.push('/login');
     },
     // 点击修改密码对话框中的确定按钮
     btnClick() {
-      this.$refs.modifyPassword_rules.validate((valid) => {
+      this.$refs.modifyPassword_ref.validate((valid) => {
         if(!valid) {
           return this.$message.error('验证不通过！')
         }
         const pass = this.modifyPassword;
         const passParams = this.modifyPasswordParams;
-        passParams.name = pass.username;
+        passParams.name = pass.userName;
         passParams.newPwd = pass.newPassword;
-        passParams.oldPw = pass.oldPassword;
-        this.modify_password1(passParams)
+        passParams.oldPwd = pass.oldPassword;
+        console.log(passParams);
+        this.modify_password1(passParams);
+        // 隐藏对话框
+        this.modifyPasswordFlag = false;
       })
-
+    },
+    handleCommand(command) {
+      // 点击退出登录按钮
+      if(command === 'out') {
+        console.log('退出登录');
+         this.minor_logout1()
+      } else {
+        // 点击修改按钮 修改用户名密码
+        console.log("修改密码");
+        this.modifyPassword.userName = localStorage.getItem('username');
+        this.modifyPasswordFlag = true
+      }
+    },
+    // 对话框关闭 把表单恢复到初始状态
+    modifyPasswordClosed() {
+      this.$refs.modifyPassword_ref.resetFields()
     }
 
   }
@@ -219,18 +256,26 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    min-width: 400px;
     color: #e9edf0;
     background-color: #0f5076;
   }
   .head_left {
     font-size: 15px;
   }
+  .home_child_container {
+    height: calc(100% - 50px);
+  }
   .home_aside {
     background-color: #22262f;
   }
   .home_main {
-    padding: 0;
+    min-width: 1000px;
+    padding: 20px 10px 10px 20px;
     background-color: #ffffff;
+    /* overflow: auto; */
+    overflow-y: auto;
+    overflow-x: hidden;
   }
   .el-dropdown-left {
     cursor: pointer;
