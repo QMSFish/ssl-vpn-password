@@ -24,6 +24,10 @@ body,
     overflow: hidden!important;
 }
 
+.el-table {
+    margin-bottom: 10px;
+}
+
 .el-table th {
     color: #fff;
     /* height: 40px; */

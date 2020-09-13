@@ -9,8 +9,9 @@
       </div>
       <!-- 右边面包屑 -->
       <el-breadcrumb separator="-" v-if="topdata.hasOwnProperty('right')">
-        <el-breadcrumb-item :to="{ path: topdata.right.path[0] }">{{topdata.right.info[0]}}</el-breadcrumb-item>
-        <el-breadcrumb-item :to="{ path: topdata.right.path[1] }">{{topdata.right.info[1]}}</el-breadcrumb-item>
+        <!-- <el-breadcrumb-item :to="{ path: topdata.right.path[0] }">{{topdata.right.info[0]}}</el-breadcrumb-item> -->
+        <el-breadcrumb-item >{{topdata.right.info[0]}}</el-breadcrumb-item>
+        <el-breadcrumb-item >{{topdata.right.info[1]}}</el-breadcrumb-item>
         <el-breadcrumb-item>{{topdata.right.info[2]}}</el-breadcrumb-item>
       </el-breadcrumb>
     </div>

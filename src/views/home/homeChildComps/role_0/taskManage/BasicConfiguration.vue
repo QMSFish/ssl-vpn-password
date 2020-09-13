@@ -111,7 +111,7 @@ export default {
         center: '',
         right: {
           info: ['首页','任务管理','基本配置'],
-          path: ['/homePage','/basic']
+          path: ['/homePage']
         }
       },
       ruleForm: {

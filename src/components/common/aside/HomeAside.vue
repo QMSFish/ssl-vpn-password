@@ -5,7 +5,7 @@
   @close="handleClose" 
   class="el-menu-vertical-demo"
   background-color="#313743"
-  text-color="#fff" 
+  text-color="#fff"  
   active-text-color="#359bff"
   :unique-opened="true"
   :collapse="flag"

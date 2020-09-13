@@ -7,7 +7,17 @@ export function modify_password(obj) {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        data: obj
+        data: obj,
+        transformRequest: [
+            function(data) {
+                let ret = ''
+                for (let it in data) {
+                    ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                }
+                ret = ret.substring(0, ret.lastIndexOf('&'));
+                return ret
+            }
+        ],
     })
 
 }
@@ -88,6 +98,7 @@ export function delete_case(caseName) {
 }
 
 export function add_case(obj) {
+    console.log(obj);
     return request1({
         url: '/case/add_case',
         method: 'post',
@@ -106,7 +117,7 @@ export function query_login_stat() {
 
 export function minor_logout() {
     return request1({
-        url: '/user/minor_logout',
+        url: '/login/minor_logout',
         method: 'post',
     })
 }

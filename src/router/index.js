@@ -70,6 +70,7 @@ router.beforeEach(async(to, from, next) => {
     const userName = localStorage.getItem('username');
     const level = localStorage.getItem('level');
     const active = sessionStorage.getItem('activeIndex');
+    console.log(22);
     // 跳转页面是否是登录页面
     if (to.path === '/login') {
         console.log('login');
@@ -98,11 +99,16 @@ router.beforeEach(async(to, from, next) => {
             Message.error('请重新登录！');
             return next('/login');
         }
-        if (active) {
-            sessionStorage.removeItem('activeIndex')
-        }
+        // if (active) {
+        //     sessionStorage.removeItem('activeIndex')
+        //     window.location.reload();
+        // }
         // window.location.reload();
         next();
+        // if (active) {
+        //     sessionStorage.removeItem('activeIndex')
+        //     window.location.reload();
+        // }
     } else {
         // 查询用户登录状态
         const res = await query_login_stat();

@@ -28,7 +28,7 @@
           <!-- 菜单栏部分 -->
           <home-aside :meunList="meunList" 
           :iconList="iconList[level]" :flag="flag">
-            <el-menu-item index="/homePage" class="home_aside_item">
+            <el-menu-item index="/homePage" class="home_aside_item" @click="clearActive">
               <i class="el-icon-house border"></i>
               <span slot="title">首页</span>
             </el-menu-item>  
@@ -241,6 +241,13 @@ export default {
     // 对话框关闭 把表单恢复到初始状态
     modifyPasswordClosed() {
       this.$refs.modifyPassword_ref.resetFields()
+    },
+    // 点击菜单栏首页
+    clearActive() {
+      console.log(11);
+      // if(sessionStorage.getItem('activeIndex')) {
+      //   sessionStorage.removeItem('activeIndex')
+      // }
     }
 
   }

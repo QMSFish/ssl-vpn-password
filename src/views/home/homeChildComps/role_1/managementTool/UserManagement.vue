@@ -37,21 +37,25 @@
       <!-- table -->
       <!-- table -->
         <el-table
-          :data="tableData"
+          v-loading="loading"
+          :data="tableData == []? []:tableData[currentIndex]"
           style="width: 100%"
           border
-          stripe>
+          stripe
+          :default-sort="{prop: 'level', order: 'ascending'}">
           <el-table-column
             prop="id"
             label="ID"
             sortable
+            :sort-by="['id', 'level']"
             align='center'
-            min-width="100">
+            min-width="280">
           </el-table-column>
           <el-table-column
             prop="name"
             label="管理员名称"
             sortable
+            :sort-orders="['ascending']"
             align='center'
             min-width="200">
           </el-table-column>
@@ -59,6 +63,7 @@
             prop="level"
             label="用户角色"
             sortable
+            :sort-orders="['ascending']"
             align='center'
             min-width="100">
           </el-table-column>
@@ -74,6 +79,16 @@
             </template>
           </el-table-column>
         </el-table>
+        <!-- 分页 -->
+        <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="currentPage"
+        :page-sizes="[1, 3, 5, 8]"
+        :page-size="pageSize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total">
+        </el-pagination>
     </div>
   </div>
 </template>
@@ -82,6 +97,8 @@
 import TopLine from 'components/content/TopLine'
 
 import {getUsers,resetToken,deleteUser,addUser} from 'network/home'
+
+import {divideArray} from 'components/common/divideArray'
 
 export default {
   name: 'usermanage',
@@ -115,7 +132,7 @@ export default {
         center: '',
         right: {
           info: ['首页','管理工具','用户管理'],
-          path: ['/homePage','/usermg']
+          path: ['/homePage']
         }
       },
       // form表单
@@ -155,7 +172,16 @@ export default {
         ]
       },
       // 用户管理 table
-        tableData: [],
+      tableData: [],
+      loading: false,
+      currentIndex: 0,
+      // 查询用例请求回来的数据数组
+      resData: [],
+      // 分页 
+      currentPage: 1,
+      total: 0,
+      // 默认每页三条数据
+      pageSize: 3,
     }
   },
   created() {
@@ -165,12 +191,23 @@ export default {
   methods: {
     // 用户查询请求
     async getUsers1() {
+      this.loading = true;
       const res = await getUsers();
       console.log(res);
       if(!res || res.status !== 0) {
+        this.loading = false;
         return this.$message.error('请求失败')
       }
-      this.tableData = res.data;
+      // 每次清空resData tableData
+        this.resData = [];
+        this.tableData = [];
+      // this.tableData = res.data;
+      if(res.data.length !== 0) {
+        this.resData = res.data; 
+        this.tableData = divideArray(this.resData,this.pageSize);
+      }
+      this.total = this.resData.length;
+      this.loading = false;
     },
     // 添加用户请求
     async addUser1(obj) {
@@ -206,6 +243,22 @@ export default {
       // 重新请求用户信息
       this.getUsers1();
     },
+    // 分页
+    // 监听每页数据数量发生改变
+    handleSizeChange(val) {
+      console.log('每页：' + val + '条');
+      this.pageSize = val;
+      // this.currentIndex = 0;
+      // console.log('------页码' + this.currentIndex );
+      console.log('------currentIndex：' + this.currentIndex );
+      this.getUsers1();
+    },
+    // 监听页码发生改变
+    handleCurrentChange(val) {
+      console.log('当前页码：' + val);
+      this.currentIndex = val - 1;
+      console.log('------currentIndex：' + this.currentIndex );
+    },
     // 重置表单
     resetForm() {
       this.$refs.userForm_ref.resetFields();
@@ -237,9 +290,9 @@ export default {
 
 </script>
 <style scoped>
-  /* .main_header {
-    margin: 20px 20px 0;
-  } */
+  .main_header {
+    padding-bottom: 50px;
+  }
   .user_center {
     position: relative;
     height: 400px;

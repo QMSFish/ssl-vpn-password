@@ -110,7 +110,7 @@ export default {
         center: '',
         right: {
           info: ['首页','加密卡管理','加密卡管理'],
-          path: ['/homePage','/encryptManage']
+          path: ['/homePage']
         }
       },
       // 基本信息 form

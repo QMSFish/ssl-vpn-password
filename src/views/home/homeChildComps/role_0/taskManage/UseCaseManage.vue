@@ -123,10 +123,12 @@
         </div>
         <!-- table -->
         <el-table
-          :data="tableData"
+          v-loading="loading"
+          :data="tableData == []? []:tableData[currentIndex]"
           style="width: 100%"
           border
-          stripe>
+          stripe
+          :default-sort="{prop: 'time', order: 'ascending'}">
           <el-table-column
             type="index">
           </el-table-column>
@@ -134,37 +136,54 @@
             prop="name"
             label="用例库表名称"
             sortable
+            :sort-orders="['ascending']"
             min-width="200">
           </el-table-column>
           <el-table-column
             prop="time"
             label="创建时间"
             sortable
+            :sort-orders="['ascending']"
             min-width="160">
           </el-table-column>
           <el-table-column
             prop="type"
             label="待检设备类型"
             sortable
+            :sort-by="['type', 'time']"
             min-width="160">
           </el-table-column>
           <el-table-column
             prop="mode"
             label="模式"
             sortable
+            :sort-by="['mode', 'time']"
             min-width="100">
           </el-table-column>
           <el-table-column
             label="操作"
-            min-width="180">
+            min-width="230">
             <template slot-scope="scope">
-              <el-button type="primary" size="mini" 
-              @click="showModifyDialog(scope.row)">修改</el-button>
+              <div v-if="scope.row.referenceNum == 0">
+                <el-button type="primary" size="mini" 
+              @click="showModifyDialog(scope.row)" round>修改</el-button>
               <el-button type="danger" size="mini"
-              @click="deleteCaseBtn(scope.row.name)">删除</el-button>
+              @click="deleteCaseBtn(scope.row.name)" round >删除</el-button>
+              </div>
+              <el-button type="warning" size="mini" :disabled="true" round v-else>用例已被引用{{scope.row.referenceNum}}次</el-button>
             </template>
           </el-table-column>
         </el-table>
+        <!-- 分页 -->
+        <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="currentPage"
+        :page-sizes="[1, 3, 5, 8]"
+        :page-size="pageSize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total">
+        </el-pagination>
       </div>
       <!-- 修改用例对话框 -->
       <el-dialog
@@ -172,7 +191,8 @@
         :visible.sync="modifyCaseFlag"
         width="50%"
         @close="modifyCaseClosed">
-        <el-form :model="useCaseLibrary" :rules="useCaseLibrary_rules" ref="useCaseLibrary_ref" 
+        <el-form :model="useCaseLibrary" :rules="useCaseLibrary_rules" 
+        ref="useCaseLibrary_ref" 
         label-width="110px">
           <el-form-item label="用例库表名称" prop="caseName">
             <el-input v-model="useCaseLibrary.caseName"></el-input>
@@ -222,6 +242,8 @@ import TopLine from 'components/content/TopLine'
 
 import {query_case,modify_case,delete_case,add_case} from 'network/home'
 
+import {divideArray} from 'components/common/divideArray'
+
 export default {
   name: 'usecase',
   components: {
@@ -251,7 +273,7 @@ export default {
         center: '',
         right: {
           info: ['首页','任务管理','用例管理'],
-          path: ['/homePage','/basic']
+          path: ['/homePage']
         }
       },
       useCaseForm: {
@@ -278,11 +300,17 @@ export default {
       // 用例选择
       checkList_1: [],
       checkList_2: [],
-      // 请求过来的用例数据
-      caseData: [],
       // 用例库表 table
       tableData: [],
-      
+      loading: false,
+      currentIndex: 0,
+      // 查询用例请求回来的数据数组
+      resData: [],
+      // 分页 
+      currentPage: 1,
+      total: 0,
+      // 默认每页三条数据
+      pageSize: 3,
       // 用例对话框显示隐藏变量
       modifyCaseFlag: false,
       // 修改用例请求参数对象
@@ -353,28 +381,47 @@ export default {
   methods: {
     // 查询用例请求
     async query_case1() {
+      this.loading = true;
       const res = await query_case();
       console.log(res);
       if(!res || res.status !== 0) {
+        this.loading = false;
         return this.$message.error('查询用例失败')
       }
-      res.data.forEach(item => {
+      
+      // 每次清空resData tableData
+        this.resData = [];
+        this.tableData = [];
+      if(res.data.length !== 0) {
+        res.data.forEach(item => {
         const table = {};
+        table.referenceNum = item.referenceNum;
         table.name = item.useCaseLibrary.caseName;
         table.time = item.useCaseLibrary.time;
         table.type = item.useCaseLibrary.deviceType;
         table.mode = item.useCaseLibrary.mode;
         table.casesName = item.useCaseLibrary.casesName[0];
-        this.tableData.push(table)
-      })
+        this.resData.push(table)
+        });
+        this.tableData = divideArray(this.resData,this.pageSize);
+      }
+      this.total = this.resData.length;
+      console.log('---看这里这里----');
+      console.log(this.tableData);
+      this.loading = false;
     },
     // 修改用例请求
     async modify_case1(obj) {
       const res = await modify_case(obj);
       console.log(res);
       if(!res || res.status !== 0) {
+        if(res.hasOwnProperty('msg')) {
+          return this.$message.error('有任务关联该用例无法修改')
+
+        }
         return this.$message.error('修改用例失败')
       }
+      this.$message.success('修改用例成功')
       // 重新查询用例信息
       this.query_case1()
     },
@@ -390,13 +437,30 @@ export default {
     },
     //新增用例请求
     async add_case1(obj) {
-      const res = await add_case();
+      const res = await add_case(obj);
       console.log(res);
       if(!res || res.status !== 0) {
         return this.$message.error('添加用例失败')
       }
       // 重新查询用例信息
       this.query_case1()
+    },
+    
+    // 分页
+    // 监听每页数据数量发生改变
+    handleSizeChange(val) {
+      console.log('每页：' + val + '条');
+      this.pageSize = val;
+      // this.currentIndex = 0;
+      // console.log('------页码' + this.currentIndex );
+      console.log('------currentIndex：' + this.currentIndex );
+      this.query_case1()
+    },
+    // 监听页码发生改变
+    handleCurrentChange(val) {
+      console.log('当前页码：' + val);
+      this.currentIndex = val - 1;
+      console.log('------currentIndex：' + this.currentIndex );
     },
     //点击修改按钮
     showModifyDialog(row) {
@@ -552,6 +616,7 @@ export default {
   .use_case_list {
     min-width: 800px;
     padding-top: 10px;
+    padding-bottom: 50px;
     border-top: 3px solid #4e89b9;
   }
   .use_case_top1 {

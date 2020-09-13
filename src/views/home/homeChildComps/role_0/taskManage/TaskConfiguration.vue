@@ -69,71 +69,82 @@
         <div class="task_list_center">
           <ul>
             <el-tooltip content="查询任务" placement="top-end" :enterable='false'>
-              <li @click="query_task_btn">
-                <i class="el-icon-set-up"></i>
+              <li @click="query_task_btn" class="task_list_li">
+                <i class="iconfont icon-chaxun"></i>
               </li>
             </el-tooltip>
             <el-tooltip content="修改任务" placement="top-end" :enterable='false'>
-              <li @click="change_task_btn">
-                <i class="el-icon-platform-eleme"></i>
+              <li @click="change_task_btn" class="task_list_li">
+                <i class="iconfont icon-xiugai"></i>
               </li>
             </el-tooltip>
             <el-tooltip content="删除任务" placement="top-end" :enterable='false'>
-              <li @click="delete_task_btn">
-                <i class="el-icon-delete-solid"></i>
+              <li @click="delete_task_btn" class="task_list_li">
+                <i class="iconfont icon-qinglishuju"></i>
               </li>
             </el-tooltip>
             <el-tooltip content="启动任务" placement="top-end" :enterable='false'>
-              <li @click="start_task_btn">
-                <i class="el-icon-setting"></i>
+              <li @click="start_task_btn" class="task_list_li">
+                <i class="iconfont icon-qidong"></i>
               </li>
             </el-tooltip>
             <el-tooltip content="停止任务" placement="top-end" :enterable='false'>
-              <li @click="stop_task_btn">
-                <i class="el-icon-s-help"></i>
+              <li @click="stop_task_btn" class="task_list_li">
+                <i class="iconfont icon-tingzhi"></i>
               </li>
             </el-tooltip>
             <el-tooltip content="重启任务" placement="top-end" :enterable='false'>
-              <li @click="restart_task_btn">
-                <i class="el-icon-upload"></i>
+              <li @click="restart_task_btn" class="task_list_li">
+                <i class="iconfont icon-zhongqi"></i>
               </li>
             </el-tooltip>
             <el-tooltip content="清理数据" placement="top-end" :enterable='false'>
-              <li @click="clean_data">
-                <i class="el-icon-s-cooperation"></i>
+              <li @click="clean_data" class="task_list_li">
+                <i class="iconfont icon-dingshiqinglishuju"></i>
               </li>
             </el-tooltip>
           </ul>
         </div>
         <!-- table -->
         <el-table
-          :data="tableData"
+          v-loading="loading"
+          :data="tableData == []? []:tableData[currentIndex]"
           style="width: 100%"
-          :height="250"
           border
-          stripe>
+          stripe
+          :default-sort="{prop: 'taskNumber', order: 'ascending'}">>
           <el-table-column
           width="50">
             <template slot-scope="scope">
-              <input type="radio" name="user" :value="scope.row.taskNumber" @change="radioChange">
+              <!-- <input type="radio" name="user" :value="scope.row.taskNumber" @change="radioChange"> -->
+              <label :for="scope.row.taskNum" class="radio">
+                <input type="radio" name="user" :id="scope.row.taskNum" :value="scope.row.taskNumber" @change="radioChange" />
+                <div class="radio-div">
+                  <span class="radio-on"></span>
+                  <span class="radio-bg"></span>
+                </div>
+              </label>
             </template>
           </el-table-column>
           <el-table-column
             prop="taskNumber"
             label="任务号"
             sortable
+            :sort-orders="['ascending']"
             min-width="100">
           </el-table-column>
           <el-table-column
             prop="status"
             label="状态"
             sortable
+            :sort-by="['status', 'lastChangeTime', 'taskNumber']"
             min-width="100">
           </el-table-column>
           <el-table-column
             prop="lastChangeTime"
             label="最后修改时间"
             sortable
+            :sort-by="['lastChangeTime', 'status', 'name']"
             min-width="150">
           </el-table-column>
           <el-table-column
@@ -146,23 +157,37 @@
             prop="name"
             label="厂家名称"
             sortable
+            :sort-orders="['ascending']"
             min-width="100">
           </el-table-column>
           <el-table-column
             prop="cpuModel"
             label="CPU型号"
             sortable
+            :sort-orders="['ascending']"
             min-width="120">
           </el-table-column>
         </el-table>
+        <!-- 分页 -->
+        <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="currentPage"
+        :page-sizes="[1, 3, 5, 8]"
+        :page-size="pageSize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total">
+        </el-pagination>
       </div>
       <!-- 查询单个任务对话框 -->
       <el-dialog
         title="任务详情"
         :visible.sync="queryTaskFlag"
         width="30%">
-        <div v-for="(value,key,index) in taskData" :key="index" class="query_task_div">
-          <span class="query_task_left">{{key}}:</span><span class="query_task_right">{{value}}</span>
+        <div v-loading="singelLoading">
+          <div v-for="(value,key,index) in taskData" :key="index" class="query_task_div">
+            <span class="query_task_left">{{key}}:</span><span class="query_task_right">{{value}}</span>
+          </div>
         </div>
       </el-dialog>
       <!-- 修改任务对话框 -->
@@ -172,6 +197,7 @@
         width="50%"
         >
         <el-form :model="modifyTaskData" :rules="modifyTask_rules" ref="modifyTask_ref" 
+        v-loading="fromLoading"
         label-width="100px">
           <el-form-item label="任务编号" prop="taskNum">
             <el-input v-model="modifyTaskData.taskNum"></el-input>
@@ -209,6 +235,8 @@
 <script>
 import TopLine from 'components/content/TopLine'
 
+import {divideArray} from 'components/common/divideArray'
+
 import {query_task,query_case,add_task,query_singel_task,modify_task,delete_task,start_task,stop_task,restart_task,clean_data} from 'network/home'
 
 export default {
@@ -223,7 +251,7 @@ export default {
         center: '',
         right: {
           info: ['首页','任务管理','任务配置'],
-          path: ['/homePage','/basic']
+          path: ['/homePage']
         }
       },
       // 基本信息 from
@@ -248,7 +276,7 @@ export default {
           { required: true, message: '请输入CPU型号', trigger: 'blur' }
         ],
         brief: [
-          { required: true, message: '请输入内容', trigger: 'blur' }
+          { required: true, message: '请输入内容',trigger: 'blur' }
         ],
         caseLib: [
           { required: true, message: '请选择一个选项', trigger: 'blur' }
@@ -256,14 +284,27 @@ export default {
       },
       // 任务列表 table
       tableData: [],
+      loading: false,
+      currentIndex: 0,
+      // 查询用例请求回来的数据数组
+      resData: [],
+      // 分页 
+      currentPage: 1,
+      total: 0,
+      // 默认每页三条数据
+      pageSize: 3,
       // 选中的任务号
       selectedTask: null,
+      // 启动任务的任务号
+      // startTaskNum: null,
       // 查询任务对话框的显示隐藏变量
       queryTaskFlag: false,
+      singelLoading: false,
       // 查询任务的对象数据
       taskData: {},
       // 修改任务对话框的显示隐藏变量
       modifyTaskFlag: false,
+      fromLoading: false,
       // 修改任务 from
       modifyTaskData: {
         taskNum: '',
@@ -290,6 +331,8 @@ export default {
           { required: true, message: '请选择一个选项', trigger: 'blur' }
         ],
       },
+      // 开始任务定时器
+      // startTaskTimer: null
     } 
   },
   created() {
@@ -315,15 +358,18 @@ export default {
     },
     // 任务查询请求
     async query_task1() {
+      this.loading = true;
       const res = await query_task();
       console.log(res);
       if(!res || res.status !== 0) {
-        return this.$message.error('查询任务失败')
-      }
-      // 每次重新请求 清空tableData
-      this.tableData = [];
-      // const obj = res.data['演示任务']
-      for(var key in res.data) {
+        this.loading = false;
+        this.$message.error('查询任务失败')
+      } else {
+        // 每次清空resData tableData
+        this.resData = [];
+        this.tableData = [];
+       if(res.data !== {}) {
+        for(var key in res.data) {
         const val = {};
         const obj = res.data[key]
         val.taskNumber = obj.taskNum;
@@ -332,16 +378,29 @@ export default {
         val.cpuModel = obj.cpu;
         val.lastChangeTime = obj.lastModifyDate;
         val.lastDetectTime = obj.lastDate;
-        this.tableData.push(val);
+        this.resData.push(val);
+        }
+        this.tableData = divideArray(this.resData,this.pageSize);
       }
+      this.total = this.resData.length;
+      this.loading = false;
+      return res.data
+      }
+      
     },
     // 查询单个任务请求
     async query_singel_task1(num) {
       const res = await query_singel_task(num);
       console.log(res);
-      this.taskData = res.data;
-      console.log(this.taskData);
-      return this.taskData
+      if(!res || res.status !== 0) {
+         this.singelLoading = false;
+         this.$message.error('查询当前任务失败')
+      } else {
+        this.taskData = res.data;
+        console.log(this.taskData);
+        return this.taskData
+      }
+      
     },
     // 新增任务请求
     async add_task1(obj) {
@@ -380,19 +439,41 @@ export default {
     async start_task1(num) {
       const res = await start_task(num);
       console.log(res);
-      if(!res || res.status !== 0) {
-        return this.$message.error('启动任务失败')
+      if(!res) {
+         this.$message.error('启动任务失败')
+      } else if(res.status !== 0) {
+        if(res.hasOwnProperty('msg') && res.msg == '任务已经启动，无法再启动') {
+           this.$message.error('任务已经启动，无法再启动')
+        } else {
+           this.$message.error('启动任务失败')
+        }
+      } else {
+        this.$message.success('任务启动成功');
+        return res
+
       }
-      this.$message.success('任务已启动');
+      // if(!res || res.status !== 0) {
+      //   return this.$message.error('启动任务失败')
+      // }
+      
     },
     // 停止任务请求
     async stop_task1(num) {
       const res = await stop_task(num);
       console.log(res);
-      if(!res || res.status !== 0) {
-        return this.$message.error('停止任务失败')
+      if(!res) {
+        this.$message.error('停止任务失败')
+      } else if(res.status !== 0) {
+        if(res.hasOwnProperty('msg') && res.msg == '任务已经停止无需再停止') {
+          this.$message.error('任务已经停止无需再停止')
+        } else {
+          this.$message.error('停止任务失败')
+        }
+      } else {
+        this.$message.success('任务已停止');
+        return res
       }
-      this.$message.success('任务已停止');
+      
     },
     // 重启任务请求
     async restart_task1(num) {
@@ -411,6 +492,22 @@ export default {
         return this.$message.error('清理数据失败')
       }
       this.$message.success('数据清理完成');
+    },
+    // 分页
+    // 监听每页数据数量发生改变
+    handleSizeChange(val) {
+      console.log('每页：' + val + '条');
+      this.pageSize = val;
+      // this.currentIndex = 0;
+      // console.log('------页码' + this.currentIndex );
+      console.log('------currentIndex：' + this.currentIndex );
+      this.query_task1();
+    },
+    // 监听页码发生改变
+    handleCurrentChange(val) {
+      console.log('当前页码：' + val);
+      this.currentIndex = val - 1;
+      console.log('------currentIndex：' + this.currentIndex );
     },
     // 点击保存按钮
     saveClick() {
@@ -444,8 +541,11 @@ export default {
     query_task_btn() {
       console.log('11');
       if(this.selectedTask) {
-        this.query_singel_task1(this.selectedTask);
         this.queryTaskFlag = true;
+        this.singelLoading = true;
+        this.query_singel_task1(this.selectedTask).then(() => {
+          this.singelLoading = false;
+        });
       } else {
         this.$message.error('请选择一个任务！')
       }
@@ -454,15 +554,17 @@ export default {
     change_task_btn() {
       console.log(22);
       if(this.selectedTask) {
+        // 显示对话框
+        this.modifyTaskFlag = true;
+        this.fromLoading = true
         this.query_singel_task1(this.selectedTask).then((res) => {
           const obj = this.modifyTaskData;
           obj.taskNum = res.taskNum;
           obj.cpu = res.cpu;
           obj.manCompany = res.manCompany;
           obj.brief = res.brief;
-          obj.caseLib = res.caseLib
-          // 显示对话框
-          this.modifyTaskFlag = true;
+          obj.caseLib = res.caseLib;
+          this.fromLoading = false
         });
         // this.modify_task1(this.modifyTaskData);
       } else {
@@ -482,7 +584,29 @@ export default {
     start_task_btn() {
       console.log(44);
       if(this.selectedTask) {
-        this.start_task1(this.selectedTask);
+        // 先对选中的任务号赋值  防止被改变
+        const startTaskNum = this.selectedTask;
+        this.start_task1(startTaskNum).then((res) => {
+          // 只有启动任务成功，才会开启定时器
+          if(res != undefined) {
+            const startTaskTimer = setInterval(() => {
+            this.query_task1().then((res) => {
+              // 查询成功才去判断
+              if(res != undefined) {
+                if(res[startTaskNum].state == 0) {
+                  if(startTaskTimer !== null) {
+                    console.log(startTaskTimer);
+                    // this.$message.success('任务执行中')
+                    clearInterval(startTaskTimer);
+                    this.startTaskTimer = null
+                    console.log('任务执行中');
+                  }
+                }
+              }
+            });
+          }, 50);
+          }
+        })
       } else {
         this.$message.error('请选择一个任务！')
       }
@@ -491,7 +615,29 @@ export default {
     stop_task_btn() {
       console.log(55);
       if(this.selectedTask) {
-        this.stop_task1(this.selectedTask);
+        const startTaskNum = this.selectedTask;
+        this.stop_task1(startTaskNum).then((res) => {
+          // 只有停止任务成功，才会开启定时器
+          if(res != undefined) {
+            const startTaskTimer = setInterval(() => {
+            this.query_task1().then((res) => {
+              // 查询成功才去判断
+              if(res != undefined) {
+                if(res[startTaskNum].state == -1) {
+                  if(startTaskTimer !== null) {
+                    console.log(startTaskTimer);
+                    // this.$message.success('任务执行中')
+                    clearInterval(startTaskTimer);
+                    this.startTaskTimer = null
+                    console.log('任务执行完成');
+                  }
+                }
+              }
+            });
+          }, 50);
+          }
+
+        });
       } else {
         this.$message.error('请选择一个任务！')
       }
@@ -566,6 +712,7 @@ export default {
   .task_list {
     margin: 0 5px;
     border-top: 3px solid #1472b8;
+    padding-bottom: 50px;
   }
   .task_list_top {
     margin: 7px 0;
@@ -604,5 +751,63 @@ export default {
     font-weight: 700;
     font-size: 18px;
     margin-right: 15px;
+  }
+  .radio {
+    display: inline-block;
+    position: relative;
+    /* line-height: 18px; */
+    /* margin-right: 10px; */
+    cursor: pointer;
+    margin: 6px 0 0 7px;
+  }
+  
+  .radio input {
+    display: none;
+  }
+  
+  .radio .radio-bg {
+      display: inline-block;
+      height: 14px;
+      width: 14px;
+      border: 2px solid #c2c2c2;
+      padding: 0;
+      background-color: #ffffff;
+      border-radius: 100%;
+      /* vertical-align: top; */
+      cursor: pointer;
+      transition: all 0.2s ease;
+  }
+  
+  .radio .radio-bg:hover {
+      border-color: #5FB878;
+  }
+  
+  .radio .radio-on {
+      display: none;
+  }
+  
+  .radio input:checked+.radio-div span.radio-on {
+      width: 8px;
+      height: 8px;
+      position: absolute;
+      border-radius: 100%;
+      background: #5FB878;
+      top: 5px;
+      left: 5px;
+      transform: scale(0, 0);
+      transition: all 0.2s ease;
+      transform: scale(1, 1);
+      display: inline-block;
+  }
+  
+  .radio input:checked+.radio-div span.radio-bg {
+      border-color: #5FB878;
+  }
+  
+  .radio-div {
+      display: inline-block;
+  }
+  .task_list_li:hover {
+    border-color: #333333;
   }
 </style>

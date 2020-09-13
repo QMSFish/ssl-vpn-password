@@ -8,6 +8,7 @@
         <div class="content">
           <!-- form -->
           <el-form :model="setTimeForm" :rules="setTime_rules"
+          v-loading="loading"
            ref="setTime_ref" label-width="100px">
             <el-form-item label="日期" prop="date">
               <el-input v-model="setTimeForm.date" @focus="inputFocus" @blur="inputBlur"></el-input>
@@ -42,7 +43,7 @@ export default {
         center: '',
         right: {
           info: ['首页','系统管理','设置系统时间'],
-          path: ['/homePage','/systemtime']
+          path: ['/homePage']
         }
       },
       // 详情 form
@@ -73,17 +74,19 @@ export default {
   },
   methods: {
     // 查询系统时间请求
-     async query_sysdate1() {    
+     async query_sysdate1() {
+       this.loading = true;    
       const res = await query_sysdate();
       console.log(res);
       if(!res || res.status !== 0) {
+        this.loading = false;
         return this.$message.error('查询系统时间失败')
       }
       const date = res.data.split(' ');
       console.log(date);
       this.setTimeForm.date = date[0];
       this.setTimeForm.time = date[1]
-      
+      this.loading = false;  
     },
     // 修改系统时间
     async modify_sysdate1(date) {

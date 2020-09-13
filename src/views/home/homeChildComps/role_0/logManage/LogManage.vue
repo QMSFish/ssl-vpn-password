@@ -90,7 +90,7 @@ export default {
         center: '管理员日志',
         right: {
           info: ['首页','日志管理','日志管理'],
-          path: ['/homePage','/log']
+          path: ['/homePage']
         }
       },
       // 查询 v-model

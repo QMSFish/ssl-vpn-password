@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Message } from 'element-ui'
-import router from '../router/index'
-import { Loading } from 'element-ui';
+// import router from '../router/index'
+// import { Loading } from 'element-ui';
 
 export function request1(config) {
     // axios.defaults.withCredentials = true
@@ -14,22 +14,22 @@ export function request1(config) {
         timeout: 5000
     });
     // loading实例对象变量
-    let loadingInstance = null
-        // 2、axios拦截  request/respond
-        // 请求拦截
+    // let loadingInstance = null
+    // 2、axios拦截  request/respond
+    // 请求拦截
     instance.interceptors.request.use(config => {
         // 每次发起请求创建loading实例
-        console.log(document.querySelector('.home_main'));
-        if (document.querySelector('.home_main')) {
-            loadingInstance = Loading.service({
-                text: '加载中',
-                target: document.querySelector('.home_main'),
-                fullscreen: false,
-                spinner: 'el-icon-loading',
-                // background: 'rgba(255, 255, 255, 0.8)',
-                body: true
-            })
-        }
+        // console.log(document.querySelector('.home_main'));
+        // if (document.querySelector('.home_main')) {
+        //     loadingInstance = Loading.service({
+        //         text: '加载中',
+        //         target: document.querySelector('.home_main'),
+        //         fullscreen: false,
+        //         spinner: 'el-icon-loading',
+        //         // background: 'rgba(255, 255, 255, 0.8)',
+        //         body: true
+        //     })
+        // }
         // console.log(config);
         // 给请求的header添加token令牌
         // config.headers.Authorization = sessionStorage.getItem('token')
@@ -49,13 +49,14 @@ export function request1(config) {
     }, err => {
         // console.log('请求异常---拦截');
         // 关闭loading实例
+        Message.error({ message: '请求超时!' });
         console.log(err);
     });
     // 响应拦截
     instance.interceptors.response.use(res => {
-        if (loadingInstance) {
-            loadingInstance.close()
-        }
+        // if (loadingInstance) {
+        //     loadingInstance.close()
+        // }
         return res.data
             // if (res.status == 200) {
             //     return res.data
@@ -71,9 +72,9 @@ export function request1(config) {
             // console.log(res);
     }, err => {
         // console.log('响应异常----拦截'); 
-        if (loadingInstance) {
-            loadingInstance.close()
-        }
+        // if (loadingInstance) {
+        //     loadingInstance.close()
+        // }
         // if (err.response.status == 504 || err.response.status == 404) {
         //     Message.error({ message: '服务器被吃了⊙﹏⊙∥' });
         // } else if (err.response.status == 403) {
